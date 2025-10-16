@@ -1,0 +1,45 @@
+{
+  "model_name": "AdaBoost (Optimized)",
+  "training_date": "2025-10-13T17:09:27.934200",
+  "model_type": "AdaBoostRegressor",
+  "forecast_horizon": 5,
+  "target_variable": "temp",
+  "feature_count": 79,
+  "training_samples": 515,
+  "validation_performance": {
+    "rmse": 2.3267945807350072,
+    "mae": 1.8532024371134488,
+    "r2": 0.7483739158499199,
+    "mape": 9.592666394827015
+  },
+  "test_performance": {
+    "rmse": 2.0843351807213546,
+    "mae": 1.6752494182161797,
+    "r2": -0.3635006158485763,
+    "mape": 5.606413193194464
+  },
+  "hyperparameters": {
+    "estimator__ccp_alpha": 0.0,
+    "estimator__criterion": "squared_error",
+    "estimator__max_depth": 1,
+    "estimator__max_features": null,
+    "estimator__max_leaf_nodes": null,
+    "estimator__min_impurity_decrease": 0.0,
+    "estimator__min_samples_leaf": 1,
+    "estimator__min_samples_split": 2,
+    "estimator__min_weight_fraction_leaf": 0.0,
+    "estimator__monotonic_cst": null,
+    "estimator__random_state": 42,
+    "estimator__splitter": "best",
+    "estimator": "DecisionTreeRegressor(max_depth=1, random_state=42)",
+    "learning_rate": 0.8153369702858957,
+    "loss": "linear",
+    "n_estimators": 232,
+    "random_state": 42
+  },
+  "data_info": {
+    "train_period": "2023-01-03 00:00:00 to 2024-11-16 00:00:00",
+    "test_period": "2025-05-22 00:00:00 to 2025-09-21 00:00:00",
+    "temperature_range": "10.2\u00b0C to 33.3\u00b0C"
+  }
+}
