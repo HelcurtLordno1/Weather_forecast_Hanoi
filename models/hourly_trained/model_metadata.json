@@ -1,0 +1,498 @@
+{
+  "training_info": {
+    "timestamp": "2025-11-04T23:47:59.533309",
+    "notebook": "03_model_training_hourly.ipynb",
+    "approach": "5_day_forecasting_with_hourly_data",
+    "data_source": "hourly_observations_aggregated_to_daily",
+    "data_shape": {
+      "n_samples_daily": 3649,
+      "n_features": 91,
+      "train_samples": 2554,
+      "val_samples": 328,
+      "test_samples": 693
+    },
+    "date_range": {
+      "start": "2015-09-27 00:00:00",
+      "end": "2025-09-22 00:00:00",
+      "train_end": "2022-09-23T00:00:00.000000000",
+      "val_end": "2023-09-23T00:00:00.000000000",
+      "test_end": "2025-09-22T00:00:00.000000000"
+    }
+  },
+  "forecast_horizons": {
+    "day_1": 1,
+    "day_2": 2,
+    "day_3": 3,
+    "day_4": 4,
+    "day_5": 5
+  },
+  "target_variable": {
+    "name": "temp_mean",
+    "description": "Daily average temperature aggregated from hourly observations"
+  },
+  "optimization": {
+    "method": "Optuna TPE Sampler",
+    "n_trials_per_model": 15,
+    "objective": "minimize_validation_rmse",
+    "models_evaluated": [
+      "XGBoost",
+      "LightGBM",
+      "RandomForest",
+      "GradientBoosting"
+    ]
+  },
+  "best_models": {
+    "day_1": {
+      "model_name": "XGBoost",
+      "model_file": "best_model_day_1_xgboost.joblib",
+      "test_r2": 0.9373021957865102,
+      "test_rmse": 1.294895327987801,
+      "test_mae": 0.9968494820789744,
+      "best_params": {
+        "n_estimators": 168,
+        "max_depth": 5,
+        "learning_rate": 0.05186671593313078,
+        "subsample": 0.765813570942484,
+        "colsample_bytree": 0.8944635615127058,
+        "reg_alpha": 1.162782612191883,
+        "reg_lambda": 0.8810841573060272
+      },
+      "n_trials": 15
+    },
+    "day_2": {
+      "model_name": "XGBoost",
+      "model_file": "best_model_day_2_xgboost.joblib",
+      "test_r2": 0.8521114446667135,
+      "test_rmse": 1.9901439726316463,
+      "test_mae": 1.5501757617636676,
+      "best_params": {
+        "n_estimators": 262,
+        "max_depth": 4,
+        "learning_rate": 0.013940346079873234,
+        "subsample": 0.905269907953647,
+        "colsample_bytree": 0.8320457481218804,
+        "reg_alpha": 0.3661147045343365,
+        "reg_lambda": 1.4855307303338106
+      },
+      "n_trials": 15
+    },
+    "day_3": {
+      "model_name": "XGBoost",
+      "model_file": "best_model_day_3_xgboost.joblib",
+      "test_r2": 0.807432869617155,
+      "test_rmse": 2.2709531858542737,
+      "test_mae": 1.8140740138169034,
+      "best_params": {
+        "n_estimators": 136,
+        "max_depth": 4,
+        "learning_rate": 0.028145092716060652,
+        "subsample": 0.8574269294896714,
+        "colsample_bytree": 0.8295835055926347,
+        "reg_alpha": 0.8736874205941257,
+        "reg_lambda": 1.8355586841671383
+      },
+      "n_trials": 15
+    },
+    "day_4": {
+      "model_name": "XGBoost",
+      "model_file": "best_model_day_4_xgboost.joblib",
+      "test_r2": 0.7799605573796293,
+      "test_rmse": 2.427246838455344,
+      "test_mae": 1.9371967305582036,
+      "best_params": {
+        "n_estimators": 252,
+        "max_depth": 3,
+        "learning_rate": 0.014465048426531969,
+        "subsample": 0.8042900291489747,
+        "colsample_bytree": 0.7729623569543149,
+        "reg_alpha": 0.009340454286152142,
+        "reg_lambda": 1.0283978647989493
+      },
+      "n_trials": 15
+    },
+    "day_5": {
+      "model_name": "XGBoost",
+      "model_file": "best_model_day_5_xgboost.joblib",
+      "test_r2": 0.7700654662814244,
+      "test_rmse": 2.481822316295723,
+      "test_mae": 1.962242662614214,
+      "best_params": {
+        "n_estimators": 240,
+        "max_depth": 3,
+        "learning_rate": 0.018092923339883837,
+        "subsample": 0.8091666406195489,
+        "colsample_bytree": 0.8772423395564682,
+        "reg_alpha": 1.990219285835948,
+        "reg_lambda": 1.0590213889717637
+      },
+      "n_trials": 15
+    }
+  },
+  "best_overall_model": {
+    "model_name": "XGBoost",
+    "avg_r2": 0.8293745067462865,
+    "avg_rmse": 2.0930123282449578
+  },
+  "performance_summary": {
+    "all_results": [
+      {
+        "Horizon": "Day 1",
+        "Horizon_Num": 1,
+        "Model": "XGBoost",
+        "Train_R\u00b2": 0.982036297787219,
+        "Val_R\u00b2": 0.9435242797133916,
+        "Test_R\u00b2": 0.9373021957865102,
+        "Test_MAE": 0.9968494820789744,
+        "Test_RMSE": 1.294895327987801,
+        "Test_MAPE": 4.334287624220253
+      },
+      {
+        "Horizon": "Day 1",
+        "Horizon_Num": 1,
+        "Model": "LightGBM",
+        "Train_R\u00b2": 0.9897688719265529,
+        "Val_R\u00b2": 0.945483068196974,
+        "Test_R\u00b2": 0.9353000391206046,
+        "Test_MAE": 1.0220681332859294,
+        "Test_RMSE": 1.3154080862723254,
+        "Test_MAPE": 4.4359670551673265
+      },
+      {
+        "Horizon": "Day 1",
+        "Horizon_Num": 1,
+        "Model": "RandomForest",
+        "Train_R\u00b2": 0.975366393977725,
+        "Val_R\u00b2": 0.9365819559054648,
+        "Test_R\u00b2": 0.9310359895432445,
+        "Test_MAE": 1.0510278361942074,
+        "Test_RMSE": 1.358062485945364,
+        "Test_MAPE": 4.629926223834549
+      },
+      {
+        "Horizon": "Day 1",
+        "Horizon_Num": 1,
+        "Model": "GradientBoosting",
+        "Train_R\u00b2": 0.9757099829043945,
+        "Val_R\u00b2": 0.9430647800515908,
+        "Test_R\u00b2": 0.9370894986530701,
+        "Test_MAE": 0.9876293512496408,
+        "Test_RMSE": 1.2970898811929261,
+        "Test_MAPE": 4.2876031288253404
+      },
+      {
+        "Horizon": "Day 2",
+        "Horizon_Num": 2,
+        "Model": "XGBoost",
+        "Train_R\u00b2": 0.8963523776539244,
+        "Val_R\u00b2": 0.8667855526615842,
+        "Test_R\u00b2": 0.8521114446667135,
+        "Test_MAE": 1.5501757617636676,
+        "Test_RMSE": 1.9901439726316463,
+        "Test_MAPE": 6.951243604817748
+      },
+      {
+        "Horizon": "Day 2",
+        "Horizon_Num": 2,
+        "Model": "LightGBM",
+        "Train_R\u00b2": 0.9529077886098325,
+        "Val_R\u00b2": 0.86991785821067,
+        "Test_R\u00b2": 0.8508037725677785,
+        "Test_MAE": 1.5565007791337753,
+        "Test_RMSE": 1.998923313682696,
+        "Test_MAPE": 6.925006715688204
+      },
+      {
+        "Horizon": "Day 2",
+        "Horizon_Num": 2,
+        "Model": "RandomForest",
+        "Train_R\u00b2": 0.9448850048992955,
+        "Val_R\u00b2": 0.8554403753301957,
+        "Test_R\u00b2": 0.8491807779557677,
+        "Test_MAE": 1.567277494063546,
+        "Test_RMSE": 2.009766304039994,
+        "Test_MAPE": 7.057838962099996
+      },
+      {
+        "Horizon": "Day 2",
+        "Horizon_Num": 2,
+        "Model": "GradientBoosting",
+        "Train_R\u00b2": 0.9436764552009411,
+        "Val_R\u00b2": 0.8701015321836971,
+        "Test_R\u00b2": 0.8418194220101578,
+        "Test_MAE": 1.6049916765912844,
+        "Test_RMSE": 2.058229466418549,
+        "Test_MAPE": 7.136820004680747
+      },
+      {
+        "Horizon": "Day 3",
+        "Horizon_Num": 3,
+        "Model": "XGBoost",
+        "Train_R\u00b2": 0.8659488061528394,
+        "Val_R\u00b2": 0.8178885914735753,
+        "Test_R\u00b2": 0.807432869617155,
+        "Test_MAE": 1.8140740138169034,
+        "Test_RMSE": 2.2709531858542737,
+        "Test_MAPE": 8.272970691870537
+      },
+      {
+        "Horizon": "Day 3",
+        "Horizon_Num": 3,
+        "Model": "LightGBM",
+        "Train_R\u00b2": 0.9424433647625247,
+        "Val_R\u00b2": 0.8129885543639761,
+        "Test_R\u00b2": 0.7966891226591092,
+        "Test_MAE": 1.8436634700064851,
+        "Test_RMSE": 2.333444143820091,
+        "Test_MAPE": 8.34507078286376
+      },
+      {
+        "Horizon": "Day 3",
+        "Horizon_Num": 3,
+        "Model": "RandomForest",
+        "Train_R\u00b2": 0.9261172826648754,
+        "Val_R\u00b2": 0.7986271516219858,
+        "Test_R\u00b2": 0.7968659406697747,
+        "Test_MAE": 1.8412777468339558,
+        "Test_RMSE": 2.3324292332957404,
+        "Test_MAPE": 8.420917478757838
+      },
+      {
+        "Horizon": "Day 3",
+        "Horizon_Num": 3,
+        "Model": "GradientBoosting",
+        "Train_R\u00b2": 0.8991891328286755,
+        "Val_R\u00b2": 0.8158357759733996,
+        "Test_R\u00b2": 0.7979618106291417,
+        "Test_MAE": 1.8444341458411329,
+        "Test_RMSE": 2.3261292169291603,
+        "Test_MAPE": 8.350850735778309
+      },
+      {
+        "Horizon": "Day 4",
+        "Horizon_Num": 4,
+        "Model": "XGBoost",
+        "Train_R\u00b2": 0.8216597085653463,
+        "Val_R\u00b2": 0.7947787605935247,
+        "Test_R\u00b2": 0.7799605573796293,
+        "Test_MAE": 1.9371967305582036,
+        "Test_RMSE": 2.427246838455344,
+        "Test_MAPE": 8.92870327487107
+      },
+      {
+        "Horizon": "Day 4",
+        "Horizon_Num": 4,
+        "Model": "LightGBM",
+        "Train_R\u00b2": 0.8514844433359045,
+        "Val_R\u00b2": 0.7888573044282957,
+        "Test_R\u00b2": 0.7745182009804547,
+        "Test_MAE": 1.973085700732281,
+        "Test_RMSE": 2.4570807055396595,
+        "Test_MAPE": 9.104953717113437
+      },
+      {
+        "Horizon": "Day 4",
+        "Horizon_Num": 4,
+        "Model": "RandomForest",
+        "Train_R\u00b2": 0.9267740176621387,
+        "Val_R\u00b2": 0.7641540913762177,
+        "Test_R\u00b2": 0.766755456959362,
+        "Test_MAE": 1.9871093276552683,
+        "Test_RMSE": 2.499018216520919,
+        "Test_MAPE": 9.163385235825025
+      },
+      {
+        "Horizon": "Day 4",
+        "Horizon_Num": 4,
+        "Model": "GradientBoosting",
+        "Train_R\u00b2": 0.8993144221741122,
+        "Val_R\u00b2": 0.7876926543925816,
+        "Test_R\u00b2": 0.7714088762820928,
+        "Test_MAE": 1.9574131391864231,
+        "Test_RMSE": 2.4739638951490006,
+        "Test_MAPE": 8.941255203435485
+      },
+      {
+        "Horizon": "Day 5",
+        "Horizon_Num": 5,
+        "Model": "XGBoost",
+        "Train_R\u00b2": 0.8239872947910435,
+        "Val_R\u00b2": 0.7966861930435094,
+        "Test_R\u00b2": 0.7700654662814244,
+        "Test_MAE": 1.962242662614214,
+        "Test_RMSE": 2.481822316295723,
+        "Test_MAPE": 9.028377243243902
+      },
+      {
+        "Horizon": "Day 5",
+        "Horizon_Num": 5,
+        "Model": "LightGBM",
+        "Train_R\u00b2": 0.8426408888397567,
+        "Val_R\u00b2": 0.7958843463220961,
+        "Test_R\u00b2": 0.7670207329163776,
+        "Test_MAE": 1.9731414811170038,
+        "Test_RMSE": 2.498200100213655,
+        "Test_MAPE": 9.030772398140682
+      },
+      {
+        "Horizon": "Day 5",
+        "Horizon_Num": 5,
+        "Model": "RandomForest",
+        "Train_R\u00b2": 0.9076161627655431,
+        "Val_R\u00b2": 0.7616832688848013,
+        "Test_R\u00b2": 0.7531724535043054,
+        "Test_MAE": 2.035744505620314,
+        "Test_RMSE": 2.5713748818032927,
+        "Test_MAPE": 9.441997894139103
+      },
+      {
+        "Horizon": "Day 5",
+        "Horizon_Num": 5,
+        "Model": "GradientBoosting",
+        "Train_R\u00b2": 0.8321734982402602,
+        "Val_R\u00b2": 0.796598880519397,
+        "Test_R\u00b2": 0.7640300789375798,
+        "Test_MAE": 1.981289661712052,
+        "Test_RMSE": 2.5141831284866774,
+        "Test_MAPE": 9.115228753185772
+      }
+    ],
+    "degradation_analysis": {
+      "XGBoost": {
+        "day1_r2": 0.9373021957865102,
+        "day5_r2": 0.7700654662814244,
+        "degradation": 0.16723672950508583,
+        "degradation_pct": 17.842349058486302
+      },
+      "LightGBM": {
+        "day1_r2": 0.9353000391206046,
+        "day5_r2": 0.7670207329163776,
+        "degradation": 0.16827930620422693,
+        "degradation_pct": 17.992013168570793
+      },
+      "RandomForest": {
+        "day1_r2": 0.9310359895432445,
+        "day5_r2": 0.7531724535043054,
+        "degradation": 0.17786353603893912,
+        "degradation_pct": 19.10383036064985
+      },
+      "GradientBoosting": {
+        "day1_r2": 0.9370894986530701,
+        "day5_r2": 0.7640300789375798,
+        "degradation": 0.17305941971549033,
+        "degradation_pct": 18.467757878435098
+      }
+    },
+    "overall_statistics": {
+      "avg_r2": 0.8240262353560126,
+      "std_r2": 0.06471195124045555,
+      "best_r2": 0.9373021957865102,
+      "worst_r2": 0.7531724535043054,
+      "avg_rmse": 2.125418235026742,
+      "avg_mae": 1.6743596550027633
+    }
+  },
+  "feature_engineering": {
+    "total_features": 91,
+    "aggregation_method": "hourly_to_daily",
+    "scaling": "RobustScaler",
+    "aggregation_stats": [
+      "mean",
+      "min",
+      "max",
+      "std",
+      "sum"
+    ]
+  },
+  "files": {
+    "scaler": "scaler_5day.joblib",
+    "features": "feature_columns_5day.joblib",
+    "results_csv": "model_results_5day.csv",
+    "models": [
+      {
+        "model_name": "XGBoost",
+        "model_file": "best_model_day_1_xgboost.joblib",
+        "test_r2": 0.9373021957865102,
+        "test_rmse": 1.294895327987801,
+        "test_mae": 0.9968494820789744,
+        "best_params": {
+          "n_estimators": 168,
+          "max_depth": 5,
+          "learning_rate": 0.05186671593313078,
+          "subsample": 0.765813570942484,
+          "colsample_bytree": 0.8944635615127058,
+          "reg_alpha": 1.162782612191883,
+          "reg_lambda": 0.8810841573060272
+        },
+        "n_trials": 15
+      },
+      {
+        "model_name": "XGBoost",
+        "model_file": "best_model_day_2_xgboost.joblib",
+        "test_r2": 0.8521114446667135,
+        "test_rmse": 1.9901439726316463,
+        "test_mae": 1.5501757617636676,
+        "best_params": {
+          "n_estimators": 262,
+          "max_depth": 4,
+          "learning_rate": 0.013940346079873234,
+          "subsample": 0.905269907953647,
+          "colsample_bytree": 0.8320457481218804,
+          "reg_alpha": 0.3661147045343365,
+          "reg_lambda": 1.4855307303338106
+        },
+        "n_trials": 15
+      },
+      {
+        "model_name": "XGBoost",
+        "model_file": "best_model_day_3_xgboost.joblib",
+        "test_r2": 0.807432869617155,
+        "test_rmse": 2.2709531858542737,
+        "test_mae": 1.8140740138169034,
+        "best_params": {
+          "n_estimators": 136,
+          "max_depth": 4,
+          "learning_rate": 0.028145092716060652,
+          "subsample": 0.8574269294896714,
+          "colsample_bytree": 0.8295835055926347,
+          "reg_alpha": 0.8736874205941257,
+          "reg_lambda": 1.8355586841671383
+        },
+        "n_trials": 15
+      },
+      {
+        "model_name": "XGBoost",
+        "model_file": "best_model_day_4_xgboost.joblib",
+        "test_r2": 0.7799605573796293,
+        "test_rmse": 2.427246838455344,
+        "test_mae": 1.9371967305582036,
+        "best_params": {
+          "n_estimators": 252,
+          "max_depth": 3,
+          "learning_rate": 0.014465048426531969,
+          "subsample": 0.8042900291489747,
+          "colsample_bytree": 0.7729623569543149,
+          "reg_alpha": 0.009340454286152142,
+          "reg_lambda": 1.0283978647989493
+        },
+        "n_trials": 15
+      },
+      {
+        "model_name": "XGBoost",
+        "model_file": "best_model_day_5_xgboost.joblib",
+        "test_r2": 0.7700654662814244,
+        "test_rmse": 2.481822316295723,
+        "test_mae": 1.962242662614214,
+        "best_params": {
+          "n_estimators": 240,
+          "max_depth": 3,
+          "learning_rate": 0.018092923339883837,
+          "subsample": 0.8091666406195489,
+          "colsample_bytree": 0.8772423395564682,
+          "reg_alpha": 1.990219285835948,
+          "reg_lambda": 1.0590213889717637
+        },
+        "n_trials": 15
+      }
+    ]
+  }
+}

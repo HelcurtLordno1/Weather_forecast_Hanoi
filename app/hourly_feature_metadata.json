@@ -1,0 +1,24 @@
+{
+  "total_features": 269,
+  "feature_groups": {
+    "base": 12,
+    "temporal": 15,
+    "lag": 96,
+    "rolling": 64,
+    "interaction": 14,
+    "trend": 40
+  },
+  "target_variables": ["temp", "humidity", "sealevelpressure", "windspeed", "cloudcover"],
+  "date_range": {
+    "start": "2015-09-27 00:00:00",
+    "end": "2025-09-27 23:00:00",
+    "duration_days": 3653
+  },
+  "lag_periods": {
+    "short_term": [1, 2, 3, 6],
+    "daily_pattern": [24, 48, 72],
+    "weekly_pattern": [168, 336],
+    "seasonal": [720, 1440, 2160]
+  },
+  "rolling_windows": [6, 12, 24, 168]
+}

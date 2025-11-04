@@ -1,0 +1,103 @@
+{
+  "dataset_info": {
+    "total_features": 74,
+    "total_samples": 3630,
+    "date_range": {
+      "start": "2015-10-20 00:00:00",
+      "end": "2025-09-26 00:00:00"
+    },
+    "target_variable": "temp"
+  },
+  "feature_categories": {
+    "temporal_features": [
+      "year",
+      "quarter",
+      "month_sin",
+      "month_cos",
+      "dayofyear_sin",
+      "dayofyear_cos",
+      "dayofweek_sin",
+      "dayofweek_cos",
+      "season",
+      "is_winter",
+      "is_spring",
+      "is_summer",
+      "days_since_start",
+      "years_since_start"
+    ],
+    "lag_features": [
+      "temp_lag_1",
+      "temp_lag_2",
+      "temp_lag_3",
+      "temp_lag_4",
+      "temp_lag_5",
+      "temp_lag_6",
+      "temp_lag_7",
+      "temp_lag_14",
+      "temp_lag_30",
+      "tempmax_lag_1",
+      "tempmax_lag_2",
+      "tempmax_lag_3",
+      "tempmax_lag_7",
+      "tempmin_lag_1",
+      "tempmin_lag_2",
+      "tempmin_lag_3",
+      "tempmin_lag_7",
+      "humidity_lag_1",
+      "humidity_lag_2",
+      "humidity_lag_3",
+      "humidity_lag_7",
+      "precip_lag_1",
+      "precip_lag_2",
+      "precip_lag_3",
+      "precip_lag_7",
+      "windspeed_lag_1",
+      "windspeed_lag_2",
+      "windspeed_lag_3",
+      "windspeed_lag_7",
+      "sealevelpressure_lag_1",
+      "sealevelpressure_lag_2",
+      "sealevelpressure_lag_3",
+      "sealevelpressure_lag_7",
+      "temp_diff_1d",
+      "temp_diff_2d",
+      "temp_diff_7d"
+    ],
+    "rolling_features": [],
+    "text_features": [
+      "has_rain",
+      "has_cloud",
+      "has_clear",
+      "has_fog",
+      "has_storm",
+      "has_wind",
+      "conditions_word_count",
+      "condition_rain_partially_cloudy",
+      "condition_partially_cloudy",
+      "condition_rain_overcast",
+      "condition_clear",
+      "condition_overcast",
+      "condition_rain",
+      "description_length",
+      "description_word_count",
+      "description_sentiment",
+      "desc_has_rain",
+      "desc_has_cloud",
+      "desc_has_sun",
+      "icon_encoded",
+      "icon_rain",
+      "icon_partly-cloudy-day",
+      "icon_clear-day",
+      "icon_cloudy"
+    ]
+  },
+  "data_preprocessing": {
+    "rows_removed_nan": 30,
+    "feature_engineering_steps": [
+      "temporal_features",
+      "lag_features",
+      "rolling_statistics",
+      "text_processing"
+    ]
+  }
+}
