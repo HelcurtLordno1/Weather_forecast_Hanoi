@@ -1,8 +1,8 @@
 {
   "model_selection": {
     "strategy": "day_1_prioritized",
-    "final_model": "LightGBM",
-    "selection_date": "2025-11-04T23:07:16.230302",
+    "final_model": "XGBoost",
+    "selection_date": "2025-11-12T22:30:31.147766",
     "selection_criteria": {
       "day1_r2_weight": 0.4,
       "day1_rmse_weight": 0.3,
@@ -10,142 +10,141 @@
       "robustness_weight": 0.1
     },
     "justification": [
-      "\u2705 BEST Day 1 R\u00b2 (0.9113) - highest accuracy for tomorrow's forecast",
-      "\u2705 LOWEST Day 1 RMSE (1.4229\u00b0C) - minimal prediction error",
-      "\u2705 Top 1 in multi-horizon performance (Weighted R\u00b2: 0.8423)",
-      "\u2705 Acceptable degradation (12.7%) - stable across 5 days"
+      "\u2705 BEST Day 1 R\u00b2 (0.9122) - highest accuracy for tomorrow's forecast",
+      "\u2705 LOWEST Day 1 RMSE (1.4153\u00b0C) - minimal prediction error",
+      "\u2705 Top 1 in multi-horizon performance (Weighted R\u00b2: 0.8456)",
+      "\u2705 Acceptable degradation (12.1%) - stable across 5 days"
     ]
   },
   "best_model_performance": {
-    "day1_r2": 0.9112911357836134,
-    "day1_rmse": 1.4228667601576164,
-    "day5_r2": 0.7951187589929969,
-    "weighted_r2": 0.8422588521551702,
-    "degradation_pct": 12.748107847084528,
-    "final_score": 0.8577943054302485
+    "day1_r2": 0.91223282700072,
+    "day1_rmse": 1.4152943710737047,
+    "day5_r2": 0.8016630340633676,
+    "weighted_r2": 0.8455521716991014,
+    "degradation_pct": 12.12078645545882,
+    "final_score": 0.8657524473259618
   },
   "model_info": {
-    "algorithm": "LightGBM",
+    "algorithm": "XGBoost",
     "hyperparameters": {
-      "n_estimators": 175,
-      "max_depth": 7,
-      "learning_rate": 0.06098971634353367,
-      "num_leaves": 14,
-      "subsample": 0.6403092794245864,
-      "colsample_bytree": 0.755280699248831,
-      "reg_alpha": 2.2127880677083063,
-      "reg_lambda": 7.932748282591913
+      "n_estimators": 545,
+      "max_depth": 3,
+      "learning_rate": 0.010113895789539418,
+      "subsample": 0.9043831610539343,
+      "colsample_bytree": 0.9999751396346128,
+      "reg_alpha": 0.15445606055354055,
+      "reg_lambda": 0.014239274295269333
     },
-    "n_optimization_trials": 100
+    "n_optimization_trials": 25
   },
   "multi_horizon_performance": {
     "day_1": {
-      "r2": 0.9112911357836134,
-      "rmse": 1.4228667601576164,
-      "mae": 1.1205895094415903,
-      "mape": 4.589136712742889
+      "r2": 0.91223282700072,
+      "rmse": 1.4152943710737047,
+      "mae": 1.1155014193939328,
+      "mape": 4.571041642335888
     },
     "day_2": {
-      "r2": 0.8316114585041415,
-      "rmse": 1.958079210213465,
-      "mae": 1.5484255705438499,
-      "mape": 6.469830426819834
+      "r2": 0.8368474918215105,
+      "rmse": 1.9273956125404932,
+      "mae": 1.5238998761900668,
+      "mape": 6.354725582090151
     },
     "day_3": {
-      "r2": 0.8037342185942176,
-      "rmse": 2.1134116379629444,
-      "mae": 1.6946209499000873,
-      "mape": 7.11834472364379
+      "r2": 0.8080946062964671,
+      "rmse": 2.089803207332139,
+      "mae": 1.6546655499053837,
+      "mape": 6.90554499293527
     },
     "day_4": {
-      "r2": 0.8047328478393828,
-      "rmse": 2.106458793515394,
-      "mae": 1.7067841885940325,
-      "mape": 7.172172417132094
+      "r2": 0.8059015065191831,
+      "rmse": 2.1001458378888613,
+      "mae": 1.678545609707962,
+      "mape": 6.979866556883602
     },
     "day_5": {
-      "r2": 0.7951187589929969,
-      "rmse": 2.15531466296968,
-      "mae": 1.727721799713937,
-      "mape": 7.317384538212818
+      "r2": 0.8016630340633676,
+      "rmse": 2.1206129936108207,
+      "mae": 1.687841710784556,
+      "mape": 6.982902198269708
     }
   },
   "all_models_comparison": {
     "Random Forest": {
-      "day1_r2": 0.9076609777110232,
-      "day1_rmse": 1.4516882457060714,
-      "weighted_r2": 0.83926357556325,
-      "degradation_pct": 12.66842630802989,
-      "final_score": 0.8417308518038741
+      "day1_r2": 0.9077064548431497,
+      "day1_rmse": 1.451330722163512,
+      "weighted_r2": 0.8390516342059011,
+      "degradation_pct": 12.5517790166862,
+      "final_score": 0.842468652613253
     },
     "XGBoost": {
-      "day1_r2": 0.8980903873395885,
-      "day1_rmse": 1.5250648093984758,
-      "weighted_r2": 0.8225316067234356,
-      "degradation_pct": 12.382791228014776,
-      "final_score": 0.7992961154412107
+      "day1_r2": 0.91223282700072,
+      "day1_rmse": 1.4152943710737047,
+      "weighted_r2": 0.8455521716991014,
+      "degradation_pct": 12.12078645545882,
+      "final_score": 0.8657524473259618
     },
     "LightGBM": {
-      "day1_r2": 0.9112911357836134,
-      "day1_rmse": 1.4228667601576164,
-      "weighted_r2": 0.8422588521551702,
-      "degradation_pct": 12.748107847084528,
-      "final_score": 0.8577943054302485
+      "day1_r2": 0.9096022908339291,
+      "day1_rmse": 1.4363472157595374,
+      "weighted_r2": 0.837472648403782,
+      "degradation_pct": 13.130150271341465,
+      "final_score": 0.847511086777852
     },
     "AdaBoost": {
-      "day1_r2": 0.9016667183592676,
-      "day1_rmse": 1.4980661501493227,
-      "weighted_r2": 0.8382045286674471,
-      "degradation_pct": 12.118348279117331,
-      "final_score": 0.8186827766069484
+      "day1_r2": 0.8971201371883205,
+      "day1_rmse": 1.5323074485420323,
+      "weighted_r2": 0.8382525814220763,
+      "degradation_pct": 11.115285886460736,
+      "final_score": 0.8047684174564236
     },
     "Gradient Boosting": {
-      "day1_r2": 0.9052959720609867,
-      "day1_rmse": 1.4701611763965587,
-      "weighted_r2": 0.8387697471381201,
-      "degradation_pct": 11.376655720824425,
-      "final_score": 0.8379084714496171
+      "day1_r2": 0.8920161134028604,
+      "day1_rmse": 1.5698573902759485,
+      "weighted_r2": 0.8341016477594376,
+      "degradation_pct": 10.309200509039119,
+      "final_score": 0.7871520772298617
     }
   },
   "horizon_specific_champions": {
     "day_1": {
-      "best_model": "LightGBM",
-      "test_r2": 0.9112911357836134,
-      "test_rmse": 1.4228667601576164,
-      "test_mae": 1.1205895094415903,
-      "test_mape": 4.589136712742889
+      "best_model": "XGBoost",
+      "test_r2": 0.91223282700072,
+      "test_rmse": 1.4152943710737047,
+      "test_mae": 1.1155014193939328,
+      "test_mape": 4.571041642335888
     },
     "day_2": {
-      "best_model": "LightGBM",
-      "test_r2": 0.8316114585041415,
-      "test_rmse": 1.958079210213465,
-      "test_mae": 1.5484255705438499,
-      "test_mape": 6.469830426819834
+      "best_model": "XGBoost",
+      "test_r2": 0.8368474918215105,
+      "test_rmse": 1.9273956125404932,
+      "test_mae": 1.5238998761900668,
+      "test_mape": 6.354725582090151
     },
     "day_3": {
-      "best_model": "LightGBM",
-      "test_r2": 0.8037342185942176,
-      "test_rmse": 2.1134116379629444,
-      "test_mae": 1.6946209499000873,
-      "test_mape": 7.11834472364379
+      "best_model": "XGBoost",
+      "test_r2": 0.8080946062964671,
+      "test_rmse": 2.089803207332139,
+      "test_mae": 1.6546655499053837,
+      "test_mape": 6.90554499293527
     },
     "day_4": {
-      "best_model": "AdaBoost",
-      "test_r2": 0.8066713864704448,
-      "test_rmse": 2.0959766487611162,
-      "test_mae": 1.6772574292066138,
-      "test_mape": 6.857260159502397
+      "best_model": "XGBoost",
+      "test_r2": 0.8059015065191831,
+      "test_rmse": 2.1001458378888613,
+      "test_mae": 1.678545609707962,
+      "test_mape": 6.979866556883602
     },
     "day_5": {
-      "best_model": "Gradient Boosting",
-      "test_r2": 0.8023035660651173,
-      "test_rmse": 2.11718594981061,
-      "test_mae": 1.6853296677756684,
-      "test_mape": 6.915033847643691
+      "best_model": "XGBoost",
+      "test_r2": 0.8016630340633676,
+      "test_rmse": 2.1206129936108207,
+      "test_mae": 1.687841710784556,
+      "test_mape": 6.982902198269708
     }
   },
   "training_info": {
-    "timestamp": "2025-11-04T23:07:16.245807",
+    "timestamp": "2025-11-12T22:30:31.153103",
     "n_features": 100,
     "train_samples": 2536,
     "val_samples": 514,
