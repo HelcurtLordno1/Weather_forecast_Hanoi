@@ -19,26 +19,27 @@ This is the **Step 8** implementation of the Hanoi Weather Forecasting project, 
 ```
 weather_forecast_project/
 ├── notebooks_hourly/                    # Hourly analysis notebooks
-│   ├── 00_data_exploration_hourly.ipynb # Hourly data exploration
-│   ├── 01_data_processing_hourly.ipynb  # Hourly data cleaning
+│   ├── 00_data_exploration_hourly.ipynb    # Hourly data exploration
+│   ├── 01_data_processing_hourly.ipynb     # Hourly data cleaning
 │   ├── 02_feature_engineering_hourly.ipynb # Hourly feature engineering
-│   ├── 03_model_training_hourly.ipynb   # Hourly model training
-│   └── 04_model_monitoring_hourly.ipynb # Hourly model monitoring
+│   ├── 03_model_training_hourly.ipynb      # Hourly model training
+│   ├── 04_model_monitoring_hourly.ipynb    # Hourly model monitoring
+│   └── 05_onnx_deployment_hourly.ipynb      # Hourly model deployment with ONNX
 │
-├── src/hourly/                         # Hourly-specific utilities
-│   ├── data_utils_hourly.py           # Hourly data processing
-│   ├── feature_utils_hourly.py        # Hourly feature engineering
-│   ├── model_utils_hourly.py          # Hourly model training
-│   └── visualization_hourly.py        # Hourly visualizations
+├── src/hourly/                     # Hourly-specific utilities
+│   ├── data_utils_hourly.py            # Hourly data processing
+│   ├── data_aggregation.py             # Daily data aggregated from hourly data
+│   ├── feature_utils_hourly.py         # Hourly feature engineering
+│   └── leak_free_features.py           
 │
 ├── models/hourly_trained/              # Hourly model artifacts
 │   ├── best_model_hourly.joblib       # Best hourly model
 │   ├── feature_columns_hourly.joblib  # Hourly feature list
 │   └── model_metadata_hourly.json     # Hourly model metadata
 │
-├── app/                                # Streamlit applications
+├── app/                             # Streamlit applications
 │   ├── streamlit_app_hourly.py        # Hourly forecasting app
-│   └── run_hourly_app.py             # Hourly app launcher
+│   └── run_hourly_app.py              # Hourly app launcher
 │
 └── data/raw/
     └── hanoi_weather_data_hourly.csv  # Hourly weather dataset
@@ -388,11 +389,10 @@ The monitoring system provides an interactive dashboard with:
 
 | Degradation Level | Risk | Business Impact |
 |-------------------|------|----------------|
-| **≥ 25%** | CRITICAL | Model severely compromised |
-| **20-25%** | HIGH | Reliability significantly compromised |
-| **15-20%** | MEDIUM-HIGH | Accuracy declining noticeably |
-| **10-15%** | MEDIUM | Some quality loss detected |
-| **5-10%** | LOW | Minor performance decline |
+| **≥ 12%** | CRITICAL | Model severely compromised |
+| **10-12%** | HIGH | Reliability significantly compromised |
+| **8-10%** | MEDIUM | Some quality loss detected |
+| **5-8%** | LOW | Minor performance decline |
 | **< 5%** | MINIMAL | Normal operational variance |
 
 #### **7. Hourly-Specific Monitoring**
@@ -583,44 +583,128 @@ Then navigate to the **🚨 Monitoring & Alerts** tab to view:
 
 ---
 
+### **Step 9: ONNX Deployment**
+📓 **Notebook**: `05_onnx_deployment_hourly.ipynb`
+
+This section documents the deployment optimization step where all trained tree-based models (Hourly workflow) are exported to the ONNX (Open Neural Network Exchange) format for fast, lightweight inference in production.
+
+**ONNX (Open Neural Network Exchange)** is an open, cross-platform format designed to represent trained machine learning models.  
+It allows models trained in one framework (e.g., LightGBM, XGBoost, PyTorch, Scikit-learn) to be **exported** and **run efficiently** on many platforms and languages using lightweight runtimes such as **ONNX Runtime**.
+
+ONNX separates the *training* environment from the *serving* environment — you train once, then deploy anywhere.
+
+#### 🧠 Why ONNX for this project?
+
+In this project, we trained multiple models and then selected **LightGBM models** for **multi-horizon temperature forecasting** (1-day → 5-day ahead) for Hanoi.
+
+LightGBM models are fast but require the full LightGBM package to run.  
+By exporting to ONNX, we can:
+- Deploy all 5 forecasting models in **a single portable format**,  
+- Achieve faster inference (especially for CPU-based servers or IoT devices),  
+- Use ONNX Runtime to serve forecasts without needing the training dependencies.
+
+#### 📂 What is exported as ONNX?
+**Hourly-trained models (using hourly data → daily forecast)**
+Five models of different types:
+
+| Day |	Best Model | Framework | Export Method |
+| 1 | XGBoost | booster | onnxmltools.convert_xgboost |
+| 2 | LightGBM | booster_ | onnxmltools.convert_lightgbm |
+| 3 | LightGBM | booster_ | onnxmltools.convert_lightgbm |
+| 4 | GradientBoosting | sklearn | skl2onnx.convert_sklearn |
+| 5 | XGBoost |	booster | onnxmltools.convert_xgboost |
+
+All exported to:
+```bash
+models/hourly_trained/onnx_exports/day_X_model.onnx
+```
+
+#### ⚙️ Conversion Pipeline Summary
+**1. Load:**
+- Trained models (`joblib`)
+- Feature columns (`feature_columns_5day.joblib`)
+- Scaler (`scaler_5day.joblib`)
+- `X_test` with correct feature names
+
+**2. Preprocess:**
+```python
+X_test = X_test[feature_columns].astype(np.float32)
+X_test_scaled = scaler.transform(X_test)
+```
+
+**3. Create ONNX input signature:**
+```python
+initial_type = [('float_input', FloatTensorType([None, n_features]))]
+initial_type_skl = [('float_input', SklFloatTensorType([None, n_features]))]
+```
+**4. Convert:**
+- XGBoost → `.get_booster()`
+- LightGBM → `.booster_`
+- GradientBoosting → `convert_sklearn`
+
+**5. Save ONNX files.**
+
+#### 🔍 Prediction Parity Check
+After converting, predictions are compared:
+```python
+skl_pred = model.predict(X_test)
+onnx_pred = session.run(None, {input_name: X_test})[0].ravel()
+diff = np.abs(skl_pred - onnx_pred).mean()
+```
+Expected: ~1e-3 due to float32 rounding
+
+#### ▶️ How to Run ONNX Export
+**Daily-trained export notebook:**
+```
+notebooks/Step_9_ONNX_Deployment.ipynb
+```
+Notebook include:
+- Model loading
+- ONNX conversion
+- Rescaling
+- Inference testing
+- Parity validation
+
+---
+
 ## 🎯 Performance Results with Hourly-Aggregated Data
 
 ### **5-Day Forecast Accuracy (XGBoost - Best Performer)**
 
 | Forecast Day | R² Score | RMSE (°C) | MAE (°C) | MAPE (%) | Performance |
 |--------------|----------|-----------|----------|----------|-------------|
-| **Day 1** | **0.9373** | **1.295** | **0.997** | **4.29** | 🥇 Excellent |
-| **Day 2** | **0.8521** | **1.990** | **1.550** | **6.84** | 🥈 Very Good |
-| **Day 3** | **0.8074** | **2.271** | **1.814** | **8.12** | 🥉 Good |
-| **Day 4** | **0.7800** | **2.427** | **1.937** | **8.77** | ✅ Solid |
-| **Day 5** | **0.7701** | **2.482** | **1.962** | **8.82** | ✅ Solid |
+| **Day 1** | **0.9369** | **1.299** | **1.000** | **4.35** | 🥇 Excellent |
+| **Day 2** | **0.8521** | **1.990** | **1.550** | **6.95** | 🥈 Very Good |
+| **Day 3** | **0.8074** | **2.271** | **1.814** | **8.27** | 🥉 Good |
+| **Day 4** | **0.7799** | **2.428** | **1.938** | **8.93** | ✅ Solid |
+| **Day 5** | **0.7701** | **2.482** | **1.962** | **9.03** | ✅ Solid |
 
 ### **Model Comparison Across All Horizons**
 
 | Model | Avg R² | Avg RMSE | Day 1 R² | Day 5 R² | Degradation |
 |-------|--------|----------|----------|----------|-------------|
-| **XGBoost** | 0.8294 | 2.093°C | 0.9373 | 0.7701 | 17.8% |
-| **LightGBM** | 0.8211 | 2.086°C | 0.9344 | 0.7636 | 18.3% |
-| **Gradient Boosting** | 0.8173 | 2.095°C | 0.9345 | 0.7601 | 18.7% |
-| **Random Forest** | 0.8141 | 2.126°C | 0.9294 | 0.7492 | 19.4% |
+| **XGBoost** | 0.8293 | 2.094°C | 0.9369 | 0.7701 | 17.81% |
+| **LightGBM** | 0.8220 | 2.116°C | 0.9355 | 0.7593 | 18.83% |
+| **Gradient Boosting** | 0.8170 | 2.127°C | 0.9359 | 0.7640 | 18.36% |
+| **Random Forest** | 0.8151 | 2.160°C | 0.9309 | 0.7531 | 19.11% |
 
 ### **Comparison: Daily vs Hourly-Aggregated Approach**
 
 | Metric | Daily Model (Daily Raw) | Hourly Model (Hourly → Daily) | Improvement |
 |--------|-------------------------|-------------------------------|-------------|
-| **Day 1 R²** | 0.9113 (LightGBM) | **0.9373 (XGB)** | +2.9% |
-| **Day 1 RMSE** | 1.423°C (LightGBM) | **1.295°C (XGB)** | **9.0% better** |
-| **Day 5 R²** | **0.7951 (LightGBM)** | 0.7701 (XGB) | -3.1% |
-| **Day 5 RMSE** | **2.155°C (LightGBM)** | 2.482°C (XGB) | -15.2% |
-| **Avg R²** | 0.8289 (RF) | **0.8267 (XGB)** | Similar |
-| **Features** | 130 | 91 | 30% fewer |
+| **Day 1 R²** | 0.9119 (XGBoost) | **0.9369 (XGB)** | +2.7% |
+| **Day 1 RMSE** | 1.418°C (XGBoost) | **1.299°C (XGB)** | **8.4% better** |
+| **Day 5 R²** | **0.8032 (GB)** | 0.7701 (XGB) | -4.1% |
+| **Day 5 RMSE** | **2.112°C (GB)** | 2.482°C (XGB) | -17.5% |
+| **Avg R²** | 0.8276 (XGB) | 0.8293 (XGB) | **+0.2% better** |
+| **Features** | 100 | 91 | 9% fewer |
 
 ### **Key Performance Insights**
 
-1. **Best Day 1 Accuracy**: XGBoost achieves **93.7% R²** with **1.30°C RMSE** (9% better than daily model)
+1. **Best Day 1 Accuracy**: XGBoost achieves **93.7% R²** with **1.299°C RMSE** (8.4% better than daily model)
 2. **Hourly Granularity Advantage**: Capturing diurnal patterns improves short-term forecasts significantly
-3. **Feature Efficiency**: 91 features (vs 130 in daily model) achieve comparable overall performance
-4. **Degradation**: 18.2% from Day 1 to Day 5 (similar to daily model's 12.7%)
+3. **Feature Efficiency**: 91 features (vs 100 in daily model) achieve slightly better overall performance
+4. **Degradation**: 17.81% from Day 1 to Day 5 (vs daily model's 13.5%)
 5. **Trade-off**: Better 1-2 day forecasts, slightly worse 4-5 day forecasts compared to daily raw data
 
 ### **Model Selection Strategy**
@@ -632,9 +716,9 @@ Then navigate to the **🚨 Monitoring & Alerts** tab to view:
 
 ### **Business Applications**
 
-- **Energy Management**: Superior 1-day forecasts enable better HVAC scheduling (1.28°C RMSE)
+- **Energy Management**: Superior 1-day forecasts enable better HVAC scheduling (1.299°C RMSE)
 - **Agricultural Planning**: Improved short-term forecasts for irrigation and harvesting decisions
-- **Event Planning**: Reliable 2-day ahead predictions (R² 0.85) for outdoor activities
+- **Event Planning**: Reliable 2-day ahead predictions (R² 0.852) for outdoor activities
 - **Transportation**: Better next-day road condition and safety forecasts
 
 ---
@@ -801,8 +885,8 @@ def ensemble_predict(date, horizon):
 ```
 
 **Expected Ensemble Performance**:
-- Day 1: R² ~0.94, RMSE ~1.25°C (best of both worlds)
-- Day 5: R² ~0.78, RMSE ~2.25°C (balanced approach)
+- Day 1: R² ~0.94, RMSE ~1.26°C (best of both worlds)
+- Day 5: R² ~0.79, RMSE ~2.30°C (balanced approach)
 
 ---
 
@@ -811,12 +895,12 @@ def ensemble_predict(date, horizon):
 ### **Final Project Statistics**
 
 | Aspect | Specification |
-|--------|--------------|
+|--------|------------|
 | **Total Hourly Records** | 87,698 observations (2015-2025) |
 | **Aggregated Daily Records** | 3,649 daily observations |
-| **Training Period** | 2015-09-27 to 2022-09-23 (2,554 days) |
-| **Validation Period** | 2022-09-23 to 2023-09-23 (365 days) |
-| **Test Period** | 2023-09-23 to 2025-09-22 (730 days) |
+| **Training Period** | 2015-09-27 to 2022-09-23 (2,554 days, 70%) |
+| **Validation Period** | 2022-09-23 to 2023-09-23 (328 days, 9%) |
+| **Test Period** | 2023-09-23 to 2025-09-22 (693 days, 19%) |
 | **Total Features** | 91 (from hourly aggregations) |
 | **Feature Categories** | Temporal, Lag, Rolling, Cyclical, Interactions |
 | **Forecast Horizons** | 5 days (separate model per day) |
@@ -826,12 +910,12 @@ def ensemble_predict(date, horizon):
 
 ### **Key Technical Achievements**
 
-1. **🏆 Best-in-Class Day 1 Accuracy**: 93.7% R² (1.295°C RMSE) - 9% better than daily model
-2. **⚡ Feature Efficiency**: 91 features vs 130 in daily model (30% reduction) with comparable performance
+1. **🏆 Best-in-Class Day 1 Accuracy**: 93.7% R² (1.299°C RMSE) - 8.4% better than daily model
+2. **⚡ Feature Efficiency**: 91 features vs 100 in daily model (9% reduction) with better performance
 3. **🔒 Data Leakage Prevention**: Strict temporal validation, no future information in features
 4. **🎯 Consistent Performance**: XGBoost dominates across all 5 forecast horizons
-5. **📊 Realistic Validation**: 730-day test set (20% of data) for robust evaluation
-6. **🌡️ Low Error Rates**: Day 1 MAPE 3.77%, Day 5 MAPE 8.30% (acceptable for 5-day forecasts)
+5. **📊 Realistic Validation**: 693-day test set (19% of data) for robust evaluation
+6. **🌡️ Low Error Rates**: Day 1 MAPE 4.35%, Day 5 MAPE 9.03% (acceptable for 5-day forecasts)
 
 ### **Model Performance Summary**
 
@@ -841,27 +925,27 @@ def ensemble_predict(date, horizon):
 ╠════════════╦════════╦═══════════╦══════════╦══════════╦══════════════╣
 ║ Forecast   ║   R²   ║ RMSE (°C) ║ MAE (°C) ║ MAPE (%) ║ Assessment   ║
 ╠════════════╬════════╬═══════════╬══════════╬══════════╬══════════════╣
-║ Day 1      ║ 0.9373 ║   1.295   ║   0.997  ║   3.77   ║ 🥇 Excellent ║
-║ Day 2      ║ 0.8504 ║   1.965   ║   1.483  ║   6.35   ║ 🥈 Very Good ║
-║ Day 3      ║ 0.8047 ║   2.245   ║   1.720  ║   7.43   ║ 🥉 Good      ║
-║ Day 4      ║ 0.7759 ║   2.405   ║   1.856  ║   8.02   ║ ✅ Solid     ║
-║ Day 5      ║ 0.7661 ║   2.458   ║   1.917  ║   8.30   ║ ✅ Solid     ║
+║ Day 1      ║ 0.9369 ║   1.299   ║   1.000  ║   4.35   ║ 🥇 Excellent ║
+║ Day 2      ║ 0.8521 ║   1.990   ║   1.550  ║   6.95   ║ 🥈 Very Good ║
+║ Day 3      ║ 0.8074 ║   2.271   ║   1.814  ║   8.27   ║ 🥉 Good      ║
+║ Day 4      ║ 0.7799 ║   2.428   ║   1.938  ║   8.93   ║ ✅ Solid     ║
+║ Day 5      ║ 0.7701 ║   2.482   ║   1.962  ║   9.03   ║ ✅ Solid     ║
 ╠════════════╬════════╬═══════════╬══════════╬══════════╬══════════════╣
-║ AVERAGE    ║ 0.8267 ║   2.071   ║   1.577  ║   6.77   ║ 🏆 Very Good ║
+║ AVERAGE    ║ 0.8293 ║   2.094   ║   1.653  ║   7.51   ║ 🏆 Very Good ║
 ╚════════════╩════════╩═══════════╩══════════╩══════════╩══════════════╝
 ```
 
 ### **Comparison with Daily Model**
 
 | Metric | Daily Model (Raw) | Hourly Model (Aggregated) | Winner |
-|--------|------------------|---------------------------|---------|
-| Best Algorithm | Random Forest | XGBoost | - |
-| Day 1 R² | 0.9113 | **0.9373** (+2.9%) | 🏆 Hourly |
-| Day 1 RMSE | 1.423°C | **1.295°C** (-9.0%) | 🏆 Hourly |
-| Day 5 R² | **0.7951** | 0.7701 (-3.1%) | 🏆 Daily |
-| Day 5 RMSE | **2.155°C** | 2.482°C (+15.2%) | 🏆 Daily |
-| Average R² | 0.8289 | 0.8267 (-0.3%) | 🤝 Tie |
-| Features | 130 | **91** (-30%) | 🏆 Hourly |
+|--------|------------------|---------------------------|--------|
+| Best Algorithm | XGBoost | XGBoost | - |
+| Day 1 R² | 0.9119 | **0.9369** (+2.7%) | 🏆 Hourly |
+| Day 1 RMSE | 1.418°C | **1.299°C** (-8.4%) | 🏆 Hourly |
+| Day 5 R² | **0.8032** | 0.7701 (-4.1%) | 🏆 Daily |
+| Day 5 RMSE | **2.112°C** | 2.482°C (+17.5%) | 🏆 Daily |
+| Average R² | 0.8276 | **0.8293** (+0.2%) | 🏆 Hourly |
+| Features | 100 | **91** (-9%) | 🏆 Hourly |
 | Training Time | ~2 min | ~2 min | 🤝 Tie |
 
 **Conclusion**: Hourly aggregation approach excels for 1-2 day forecasts with fewer features, while daily model is better for 4-5 day predictions. **Ensemble approach recommended** for production.

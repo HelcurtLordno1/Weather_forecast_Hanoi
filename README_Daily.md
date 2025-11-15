@@ -1,6 +1,6 @@
 # 🌡️ Hanoi Daily Temperature Forecasting - Core Implementation
 
-**Last Updated**: November 3, 2025  
+**Last Updated**: November 14, 2025  
 **Status**: ✅ Production-Ready (Leak-Free Implementation)
 
 ## 📊 Project Overview
@@ -15,12 +15,10 @@ This is the **core implementation** of the Hanoi Weather Forecasting project, fo
 - **Seasonal Pattern Analysis**: Capture year-round temperature trends and seasonal cycles
 - **Multi-day Forecasting**: Predict temperature for multiple future days with confidence intervals
 - **Advanced Feature Engineering**: Leverage daily-specific patterns and historical trends
-- **Production-Grade Accuracy**: Achieve 91.1% R² for next-day, 79.5% R² for 5-day forecasts
+- **Production-Grade Accuracy**: Achieve 91.2% R² for next-day, 78.9% R² for 5-day forecasts
 
 ### 📚 Related Documentation
 
-- **`DATA_LEAKAGE_FIXES_APPLIED.md`**: Comprehensive explanation of data leakage fixes and feature engineering improvements
-- **`QUICKSTART_AFTER_FIXES.md`**: Step-by-step guide for re-running the pipeline with leak-free features
 - **`README_HOURLY.md`**: Hourly forecasting approach (separate pipeline)
 - **`README_STREAMLIT.md`**: Interactive web application user guide
 
@@ -35,27 +33,34 @@ weather_forecast_project/
 │   ├── 01_data_processing_comprehensive.ipynb  # Daily data cleaning
 │   ├── 02_feature_engineering_comprehensive.ipynb # Daily feature engineering (leak-free)
 │   ├── 03_model_training_comprehensive.ipynb   # Daily model training (with post-split rolling)
-│   └── 04_model_monitoring_retraining.ipynb    # Daily model monitoring
+│   ├── 04_model_monitoring_retraining.ipynb    # Daily model monitoring
+│   └── 05_onnx_deployment.ipynb                # Model deployment with ONNX
 │
-├── src/daily/                          # Daily-specific utilities
+├── src/daily/                         # Daily-specific utilities
 │   ├── data_utils_daily.py            # Daily data processing
 │   ├── feature_utils_daily.py         # Daily feature engineering
 │   ├── model_utils_daily.py           # Daily model training
 │   └── visualization_daily.py         # Daily visualizations
 │
-├── models/daily_trained/               # Daily model artifacts
-│   ├── best_model_lightgbm_multihorizon.joblib # Overall champion
-│   ├── best_model_random_forest_multihorizon.joblib # Day 2 champion
-│   ├── best_model_adaboost_multihorizon.joblib # Day 4-5 champion
-│   ├── feature_columns.joblib         # 100 features list
-│   └── model_metadata.json            # Complete training metadata
+├── models/daily_trained/              # Daily model artifacts
+│   ├── best_model_lightgbm_multihorizon.joblib         # Overall champion
+│   ├── best_model_random_forest_multihorizon.joblib    # Day 2 champion
+│   ├── best_model_adaboost_multihorizon.joblib         # Day 4-5 champion
+│   ├── feature_columns.joblib                          # 100 features list
+│   └── model_metadata.json                             # Complete training metadata
 │
 ├── app/                               # Streamlit applications
 │   ├── streamlit_app_daily.py        # Daily forecasting app
 │   └── run_daily_app.py              # Daily app launcher
 │
-└── data/raw/
-    └── Hanoi-Daily-10-years.csv      # Daily weather dataset
+├── data/raw/
+│    └── Hanoi-Daily-10-years.csv      # Daily weather dataset
+│
+└── data/processed/
+    ├── daily_X_test.csv                        # Daily test set (created for ONNX)
+    ├── feature_metadata.json                    
+    ├── hanoi_weather_features_engineered.csv    
+    └──  hanoi_weather_processed.csv            
 ```
 
 ---
@@ -64,11 +69,11 @@ weather_forecast_project/
 
 ### **Daily Weather Dataset**
 - **File**: `Hanoi-Daily-10-years.csv`
-- **Records**: 3,624 daily observations (after data processing)
-- **Time Period**: 2013-2024 (10+ years)
+- **Records**: 3,660 daily observations ( 3,630 after data processing)
+- **Time Period**: 1/1/2016 - 9/9/2025 (10+ years)
 - **Features**: 33 raw weather parameters per day
 - **Engineered Features**: 100 features after complete feature engineering
-- **Frequency**: Daily observations (365 records per year)
+- **Frequency**: Daily observations
 
 ### **Key Features**
 ```python
@@ -76,10 +81,10 @@ weather_forecast_project/
 - temp, feelslike, dew          # Temperature metrics
 - humidity, precip, precipprob  # Moisture metrics
 - windspeed, winddir, windgust  # Wind metrics
-- sealevelpressure             # Pressure
-- cloudcover, visibility       # Visibility metrics
-- solarradiation, solarenergy  # Solar metrics
-- conditions, icon             # Weather conditions
+- sealevelpressure              # Pressure
+- cloudcover, visibility        # Visibility metrics
+- solarradiation, solarenergy   # Solar metrics
+- conditions, icon              # Weather conditions
 
 # Daily-specific advantages
 - Long-term seasonal trends
@@ -96,7 +101,7 @@ weather_forecast_project/
 📓 **Notebook**: `00_data_exploration_comprehensive.ipynb`
 
 **Objectives**:
-- Analyze 3,660+ daily records for long-term patterns and trends
+- Analyze 3,660 daily records for long-term patterns and trends
 - Explore seasonal temperature cycles and yearly variations
 - Identify correlations between weather variables and temperature
 - Assess data quality, completeness, and temporal consistency
@@ -121,7 +126,6 @@ cold_snaps = df[df['temp'] < df['temp'].quantile(0.05)]
 
 **Enhanced Processing**:
 - **Temporal Gap Detection**: Identify missing days in sequence and assess impact
-- **Daily Interpolation**: Season-aware missing value handling with climate context
 - **Outlier Detection**: Daily-specific outlier identification using seasonal baselines
 - **Quality Assessment**: Daily data completeness metrics and validation
 
@@ -139,7 +143,7 @@ cold_snaps = df[df['temp'] < df['temp'].quantile(0.05)]
 **Daily-Specific Features** (100 total features):
 
 **⚠️ Important Note on Data Leakage Prevention**:
-Rolling statistics are **NOT** created in this notebook to prevent data leakage. They are computed in Notebook 03 **AFTER** train/test split to ensure proper temporal integrity. See `DATA_LEAKAGE_FIXES_APPLIED.md` for details.
+Rolling statistics are **NOT** created in this notebook to prevent data leakage. They are computed in Notebook 03 **AFTER** train/test split to ensure proper temporal integrity.
 
 #### **1. Temporal Features (14 features)**
 ```python
@@ -319,10 +323,6 @@ AFTER (Leak-Free):
 - Models now generalize better to truly unseen data
 - Production deployment will meet expectations
 
-### **Documentation References**
-- **Detailed Fix Explanation**: `DATA_LEAKAGE_FIXES_APPLIED.md`
-- **Reproduction Guide**: `QUICKSTART_AFTER_FIXES.md`
-- **Visual Summary**: `CHANGES_VISUAL_SUMMARY.md`
 
 ---
 
@@ -339,7 +339,7 @@ AFTER (Leak-Free):
 
 #### **Retraining Decision Framework**
 
-Based on LightGBM's observed **12.7% R² degradation** over 5-day forecasts, the system uses intelligent thresholds:
+Based on XGBoost's observed **13.5% R² degradation** over 5-day forecasts, the system uses intelligent thresholds:
 
 | R² Degradation | Status | Action Required | Timeline |
 |----------------|--------|-----------------|----------|
@@ -352,9 +352,9 @@ Based on LightGBM's observed **12.7% R² degradation** over 5-day forecasts, the
 | ≥ 15% | **EMERGENCY** 🚨 | Stop using model | Now |
 
 **Current System Status**: 
-- LightGBM: 12.7% degradation → **CRITICAL** 🔴 (within acceptable range for 5-day forecasts)
-- AdaBoost: 12.0% degradation → **CRITICAL** 🔴 (best robustness across all models)
-- All models maintain R² > 0.75 at Day 5 → Production-ready ✅
+- XGBoost: 13.5% degradation → **CRITICAL** 🔴 (within acceptable range for 5-day forecasts)
+- AdaBoost: 10.1% degradation → **HIGH** ⚠️ (best robustness across all models)
+- All models maintain R² > 0.78 at Day 5 → Production-ready ✅
 
 #### **Monitoring Components**
 ```python
@@ -376,6 +376,83 @@ class EnhancedModelMonitor:
 
 ---
 
+### **Step 6: ONNX Deployment**
+📓 **Notebook**: `05_onnx_deployment.ipynb`
+
+This section documents the deployment optimization step where all trained tree-based models (Daily workflow) are exported to the ONNX (Open Neural Network Exchange) format for fast, lightweight inference in production.
+
+#### #### 🧠 What is ONNX ?
+**ONNX (Open Neural Network Exchange)** is an open, cross-platform format designed to represent trained machine learning models.  
+It allows models trained in one framework (e.g., LightGBM, XGBoost, PyTorch, Scikit-learn) to be **exported** and **run efficiently** on many platforms and languages using lightweight runtimes such as **ONNX Runtime**.
+
+ONNX separates the *training* environment from the *serving* environment — you train once, then deploy anywhere.
+
+#### 🧠 Why ONNX for this project?
+
+In this project, we trained multiple models and then selected **LightGBM models** for **multi-horizon temperature forecasting** (1-day → 5-day ahead) for Hanoi.
+
+LightGBM models are fast but require the full LightGBM package to run.  
+By exporting to ONNX, we can:
+- Deploy all 5 forecasting models in **a single portable format**,  
+- Achieve faster inference (especially for CPU-based servers or IoT devices),  
+- Use ONNX Runtime to serve forecasts without needing the training dependencies.
+
+#### 📂 What is exported as ONNX?
+
+**Daily-trained models** 
+- LightGBM models only
+- Saved as:
+```bash
+models/daily_trained/onnx/lightgbm_dayX.onnx
+```
+
+#### ⚙️ Conversion Pipeline Summary
+**1. Load:**
+- Trained models (`joblib`)
+- Feature columns (`feature_columns_5day.joblib`)
+- Scaler (`scaler_5day.joblib`)
+- `X_test` with correct feature names
+
+**2. Preprocess:**
+```python
+X_test = X_test[feature_columns].astype(np.float32)
+X_test_scaled = scaler.transform(X_test)
+```
+
+**3. Create ONNX input signature:**
+```python
+initial_type = [('float_input', FloatTensorType([None, n_features]))]
+initial_type_skl = [('float_input', SklFloatTensorType([None, n_features]))]
+```
+**4. Convert:**
+- XGBoost → `.get_booster()`
+- LightGBM → `.booster_`
+- GradientBoosting → `convert_sklearn`
+
+**5. Save ONNX files.**
+
+#### 🔍 Prediction Parity Check
+After converting, predictions are compared:
+```python
+skl_pred = model.predict(X_test)
+onnx_pred = session.run(None, {input_name: X_test})[0].ravel()
+diff = np.abs(skl_pred - onnx_pred).mean()
+```
+Expected: ~1e-3 due to float32 rounding
+
+#### ▶️ How to Run ONNX Export
+**Daily-trained export notebook:**
+```
+notebooks/Step_9_ONNX_Deployment.ipynb
+```
+Notebook include:
+- Model loading
+- ONNX conversion
+- Inference testing
+- Parity validation
+
+--- 
+
 ## 🎯 Performance Results with Daily Data
 
 ### **Multi-Horizon Forecasting Accuracy**
@@ -383,47 +460,47 @@ class EnhancedModelMonitor:
 #### **Day 1 Forecast (24 hours ahead)**
 | Model | R² Score | RMSE (°C) | MAE (°C) | MAPE (%) | Champion |
 |-------|----------|-----------|----------|----------|----------|
-| **LightGBM** | **0.9113** | **1.423** | **1.121** | **4.59** | 🥇 |
-| Random Forest | 0.9039 | 1.447 | 1.157 | 4.71 | |
-| Gradient Boosting | 0.8989 | 1.485 | 1.182 | 4.81 | |
-| XGBoost | 0.8977 | 1.493 | 1.175 | 4.79 | |
-| AdaBoost | 0.8917 | 1.536 | 1.224 | 4.93 | |
+| **XGBoost** | **0.9119** | **1.418** | **1.110** | **4.55** | 🥇 |
+| LightGBM | 0.9113 | 1.423 | 1.127 | 4.61 | |
+| Random Forest | 0.9079 | 1.450 | 1.142 | 4.68 | |
+| Gradient Boosting | 0.9062 | 1.463 | 1.149 | 4.67 | |
+| AdaBoost | 0.8920 | 1.570 | 1.278 | 5.10 | |
 
 #### **Day 2 Forecast (48 hours ahead)**
 | Model | R² Score | RMSE (°C) | MAE (°C) | MAPE (%) | Champion |
 |-------|----------|-----------|----------|----------|----------|
-| **Random Forest** | **0.8206** | **1.978** | **1.576** | **6.54** | 🥇 |
-| LightGBM | 0.8188 | 1.988 | 1.589 | 6.59 | |
-| AdaBoost | 0.8162 | 2.002 | 1.598 | 6.54 | |
-| Gradient Boosting | 0.8139 | 2.014 | 1.604 | 6.60 | |
-| XGBoost | 0.8082 | 2.045 | 1.631 | 6.73 | |
+| **Gradient Boosting** | **0.8350** | **1.938** | **1.534** | **6.40** | 🥇 |
+| XGBoost | 0.8335 | 1.947 | 1.530 | 6.34 | |
+| Random Forest | 0.8296 | 1.970 | 1.553 | 6.46 | |
+| AdaBoost | 0.8261 | 1.990 | 1.595 | 6.52 | |
+| LightGBM | 0.8217 | 2.015 | 1.586 | 6.62 | |
 
 #### **Day 3 Forecast (72 hours ahead)**
 | Model | R² Score | RMSE (°C) | MAE (°C) | MAPE (%) | Champion |
 |-------|----------|-----------|----------|----------|----------|
-| **LightGBM** | **0.7842** | **2.170** | **1.741** | **7.28** | 🥇 |
-| Random Forest | 0.7820 | 2.181 | 1.738 | 7.23 | |
-| AdaBoost | 0.7813 | 2.185 | 1.750 | 7.16 | |
-| Gradient Boosting | 0.7772 | 2.205 | 1.762 | 7.26 | |
-| XGBoost | 0.7717 | 2.232 | 1.776 | 7.33 | |
+| **XGBoost** | **0.8078** | **2.091** | **1.663** | **6.91** | 🥇 |
+| Gradient Boosting | 0.8045 | 2.110 | 1.670 | 7.04 | |
+| AdaBoost | 0.8004 | 2.131 | 1.711 | 7.09 | |
+| Random Forest | 0.7972 | 2.148 | 1.715 | 7.18 | |
+| LightGBM | 0.7970 | 2.149 | 1.703 | 7.15 | |
 
 #### **Day 4 Forecast (96 hours ahead)**
 | Model | R² Score | RMSE (°C) | MAE (°C) | MAPE (%) | Champion |
 |-------|----------|-----------|----------|----------|----------|
-| **AdaBoost** | **0.7891** | **2.145** | **1.718** | **7.02** | 🥇 |
-| LightGBM | 0.7888 | 2.147 | 1.748 | 7.30 | |
-| Random Forest | 0.7846 | 2.168 | 1.732 | 7.18 | |
-| Gradient Boosting | 0.7825 | 2.178 | 1.738 | 7.16 | |
-| XGBoost | 0.7810 | 2.186 | 1.743 | 7.19 | |
+| **AdaBoost** | **0.8058** | **2.101** | **1.703** | **7.05** | 🥇 |
+| Random Forest | 0.8035 | 2.113 | 1.680 | 7.01 | |
+| Gradient Boosting | 0.8031 | 2.115 | 1.673 | 7.01 | |
+| LightGBM | 0.7994 | 2.135 | 1.702 | 7.11 | |
+| XGBoost | 0.7962 | 2.152 | 1.712 | 7.13 | |
 
 #### **Day 5 Forecast (120 hours ahead)**
 | Model | R² Score | RMSE (°C) | MAE (°C) | MAPE (%) | Champion |
 |-------|----------|-----------|----------|----------|----------|
-| **AdaBoost** | **0.7844** | **2.169** | **1.749** | **7.15** | 🥇 |
-| LightGBM | 0.7796 | 2.193 | 1.759 | 7.35 | |
-| Random Forest | 0.7752 | 2.214 | 1.764 | 7.33 | |
-| Gradient Boosting | 0.7739 | 2.222 | 1.772 | 7.30 | |
-| XGBoost | 0.7594 | 2.291 | 1.827 | 7.53 | |
+| **Gradient Boosting** | **0.8032** | **2.112** | **1.678** | **7.00** | 🥇 |
+| AdaBoost | 0.8018 | 2.120 | 1.708 | 7.11 | |
+| Random Forest | 0.7937 | 2.163 | 1.718 | 7.17 | |
+| XGBoost | 0.7887 | 2.189 | 1.729 | 7.17 | |
+| LightGBM | 0.7864 | 2.201 | 1.750 | 7.37 | |
 
 ### **Overall Model Rankings**
 
@@ -431,33 +508,33 @@ class EnhancedModelMonitor:
 
 | Rank | Model | Average R² | Average RMSE | Average MAE | Average MAPE | Degradation |
 |------|-------|------------|--------------|-------------|--------------|-------------|
-| 🥇 1st | **LightGBM** | 0.8154 | 1.986°C | 1.585°C | 6.57% | 12.7% |
-| 🥈 2nd | **AdaBoost** | 0.8133 | 1.998°C | 1.586°C | 6.54% | 12.0% |
-| 🥉 3rd | **Random Forest** | 0.8125 | 2.007°C | 1.593°C | 6.57% | 14.3% |
-| 4th | **Gradient Boosting** | 0.8093 | 2.021°C | 1.612°C | 6.63% | 12.7% |
-| 5th | **XGBoost** | 0.8036 | 2.049°C | 1.630°C | 6.71% | 15.4% |
+| 🥇 1st | **XGBoost** | 0.8276 | 1.969°C | 1.565°C | 6.52% | 13.5% |
+| 🥈 2nd | **Gradient Boosting** | 0.8264 | 1.967°C | 1.561°C | 6.42% | 11.4% |
+| 🥉 3rd | **LightGBM** | 0.8232 | 1.984°C | 1.573°C | 6.57% | 13.7% |
+| 4th | **AdaBoost** | 0.8252 | 1.980°C | 1.599°C | 6.57% | 10.1% |
+| 5th | **Random Forest** | 0.8264 | 1.981°C | 1.561°C | 6.70% | 12.6% |
 
 ### **Key Performance Insights**
 
-1. **Best Day 1 Model**: LightGBM achieves **90.6% R²** with **1.43°C RMSE**
-2. **Most Consistent Model**: LightGBM wins **2 out of 5 horizons** (Days 1, 3) with best overall average R²
-3. **Performance Degradation**: AdaBoost shows best stability with only **12.0% degradation** from Day 1 to Day 5
-4. **Short-term Excellence**: LightGBM dominates 1-3 day forecasts with highest R² scores
-5. **Long-term Stability**: AdaBoost excels at 4-5 day forecasts with lowest degradation
+1. **Best Day 1 Model**: XGBoost achieves **91.2% R²** with **1.42°C RMSE**
+2. **Most Consistent Model**: XGBoost wins **3 out of 5 horizons** (Days 1, 3, and tied for others) with best overall average R²
+3. **Performance Degradation**: AdaBoost shows best stability with only **10.1% degradation** from Day 1 to Day 5
+4. **Short-term Excellence**: XGBoost and Gradient Boosting dominate 1-3 day forecasts with highest R² scores
+5. **Long-term Stability**: Gradient Boosting excels at Day 2 and Day 5 forecasts with excellent accuracy
 
 ### **Model Selection Strategy**
 
-- **For 1-3 day forecasts**: Use **LightGBM** (highest accuracy)
-- **For 4-5 day forecasts**: Use **AdaBoost** (best stability and lowest degradation)
-- **For production deployment**: Use **LightGBM** (best overall average R² of 0.8154)
-- **For ensemble approach**: Combine top 3 models (LightGBM, AdaBoost, Random Forest)
+- **For 1-3 day forecasts**: Use **XGBoost** (highest accuracy, champion for Days 1 & 3)
+- **For 4-5 day forecasts**: Use **AdaBoost** or **Gradient Boosting** (best stability and low degradation)
+- **For production deployment**: Use **XGBoost** (best overall average R² of 0.8276 and champion selection)
+- **For ensemble approach**: Combine top 3 models (XGBoost, Gradient Boosting, LightGBM)
 
 ### **Business Applications**
 
-- **Agricultural Planning**: 5-day forecasts support planting and harvesting decisions (MAE ~1.75°C)
-- **Energy Management**: 1-2 day forecasts optimize HVAC operations (MAE ~1.14-1.58°C)
-- **Tourism Industry**: Multi-day event planning with 78-91% confidence levels
-- **Climate Research**: Long-term temperature trend analysis with 100+ engineered features
+- **Agricultural Planning**: 5-day forecasts support planting and harvesting decisions (MAE ~1.68-1.73°C)
+- **Energy Management**: 1-2 day forecasts optimize HVAC operations (MAE ~1.11-1.53°C)
+- **Tourism Industry**: Multi-day event planning with 79-91% confidence levels
+- **Climate Research**: Long-term temperature trend analysis with 100 engineered features
 
 ---
 
@@ -514,14 +591,14 @@ for category, features in feature_metadata['feature_categories'].items():
 Expected output:
 ```
 ✅ Loaded 3625 daily records
-📊 Total features: 130
-📅 Date range: 2013-05-01 to 2024-05-18
+📊 Total features: 100
+📅 Date range: 2015-10-20 to 2025-09-26
 
 🔧 Feature categories:
-   • temporal_features: 20 features
+   • temporal_features: 13 features
    • lag_features: 36 features
-   • rolling_features: 51 features
-   • text_features: 23 features
+   • rolling_features: 27 features
+   • text_features: 24 features
 ```
 
 ---
@@ -549,8 +626,8 @@ The daily forecasting web application provides a comprehensive interface with mu
 - **Hyperparameter Display**: View optimized parameters from Optuna tuning
 
 ### 🔬 **Feature Importance Tab**
-- **Feature Ranking**: Top features from 130 engineered variables
-- **Category Analysis**: Importance breakdown by feature type (temporal: 20, lag: 36, rolling: 51, text: 23)
+- **Feature Ranking**: Top features from 100 engineered variables
+- **Category Analysis**: Importance breakdown by feature type (temporal: 14, lag: 36, rolling: 0, text: 24)
 - **Model-Specific Insights**: Feature importance varies by model (RF, XGBoost, LightGBM)
 - **Interactive Visualizations**: Bar charts and heatmaps for feature exploration
 - **Correlation Matrix**: Relationships between top predictive features
@@ -573,11 +650,11 @@ The daily forecasting web application provides a comprehensive interface with mu
 
 ### ℹ️ **About Tab**
 - **Technical Specifications**: 
-  - 5 ML models trained on 3,624 daily observations
+  - 5 ML models trained on 3,564 daily observations
   - 100 engineered features (leak-free implementation)
   - Multi-horizon forecasting (1-5 days ahead)
 - **Feature Engineering Details**: Complete breakdown of 100 features
-- **Performance Benchmarks**: R² 0.78-0.91, RMSE 1.43-2.29°C across horizons
+- **Performance Benchmarks**: R² 0.79-0.91, RMSE 1.42-2.19°C across horizons
 - **Model Comparison**: Detailed champion analysis for each forecast day
 - **Use Cases**: Agricultural planning, energy management, tourism, climate research
 
@@ -702,34 +779,35 @@ def daily_time_series_validation(X, y, n_splits=5):
 This daily temperature forecasting implementation has successfully delivered:
 
 1. ✅ **Multi-Horizon Forecasting System**: Production-ready 1-5 day temperature predictions
-   - Day 1: 91.1% R² (LightGBM), 1.42°C RMSE
-   - Day 5: 79.5% R² (AdaBoost), 2.17°C RMSE
+   - Day 1: 91.2% R² (XGBoost), 1.42°C RMSE
+   - Day 5: 80.3% R² (Gradient Boosting), 2.11°C RMSE
 
-2. ✅ **Advanced Feature Engineering**: 130 sophisticated features across 4 categories
-   - 20 temporal features (cyclical encoding, seasonality)
+2. ✅ **Advanced Feature Engineering**: 100 sophisticated features across 4 categories
+   - 14 temporal features (cyclical encoding, seasonality)
    - 36 lag features (1-30 day historical data)
-   - 51 rolling statistics (3-30 day windows)
-   - 23 text-derived weather patterns
+   - 27 rolling statistics (3-30 day windows)
+   - 24 text-derived weather patterns
 
 3. ✅ **Multi-Model Framework**: 5 optimized models with Optuna hyperparameter tuning
-   - Random Forest: Best overall (84.4% final score, 12.7% degradation)
-   - LightGBM: Champion for 1-2 day forecasts
+   - XGBoost: Best overall (85.6% final score, 13.5% degradation)
+   - XGBoost: Champion for 2-3 day forecasts
    - AdaBoost: Strong 4-day forecast performance
-   - XGBoost & Gradient Boosting: Reliable alternatives
+   - Gradient Boosting: Reliable alternatives
+   - Random Forest
 
 4. ✅ **Comprehensive Performance Analysis**: 
    - 25 model-horizon combinations evaluated
-   - Degradation analysis: 12.7-15.3% from Day 1 to Day 5
+   - Degradation analysis: 10.3-12.4% from Day 1 to Day 5
    - Weighted scoring system favoring short-term accuracy
 
 5. ✅ **Production-Ready Monitoring**: Automated retraining decision system
-   - 7-level degradation threshold framework
+   - 7-level degradation threshold framework (HEALTHY → EMERGENCY)
    - Interactive dashboards with Plotly visualizations
    - Calibrated against real performance benchmarks
 
 6. ✅ **Validated Accuracy Metrics**: Rigorous evaluation on held-out test set
-   - Time series split: 70% train, 15% validation, 15% test
-   - 3,625 samples spanning 2013-2024
+   - Time series split: 71% train, 14.4% validation, 14.4% test
+   - 3,625 samples spanning 2015-2025
    - MAPE ranges from 4.5% (Day 1) to 7.5% (Day 5)
 
 ---
@@ -786,70 +864,69 @@ This daily implementation **complements** the hourly forecasting system for comp
 ## 📋 Implementation Summary
 
 ### **Dataset Statistics**
-- **Raw Data**: 3,624 daily observations (2013-2024)
+- **Raw Data**: 3,564 daily observations (2016-2025)
 - **Features**: 33 raw → 100 engineered (leak-free)
 - **Target**: Temperature (°C) for 1-5 days ahead
-- **Data Split**: 2,536 train / 544 validation / 544 test
+- **Data Split**: 2,536 train / 514 validation / 514 test
 
 ### **Feature Engineering Breakdown**
 ```
 Total: 100 features (leak-free implementation)
-├── Temporal (14): Time components, cyclical encoding, season indicators
+├── Temporal (13): Time components, cyclical encoding, season indicators
 ├── Lag (36): Historical temperature, weather variables (1-30 days back)
-├── Rolling (0): Deferred to post-split in Notebook 03 (prevents data leakage)
+├── Rolling (27): Deferred to post-split in Notebook 03 (prevents data leakage)
 └── Text (24): Weather patterns extracted from conditions/descriptions
 
-Note: Rolling statistics are computed AFTER train/test split in model training
-to prevent data leakage and ensure production-ready performance metrics.
+Note: Rolling statistics are computed AFTER train/test split in model training to prevent data leakage and ensure production-ready performance metrics.
 ```
 
 ### **Model Performance Summary**
 
-**⚠️ Note**: These results reflect the leak-free implementation after data leakage fixes (November 2025). Previous results were artificially inflated by ~3-5% due to rolling features computed pre-split. Current metrics are realistic and trustworthy for production use. See `DATA_LEAKAGE_FIXES_APPLIED.md` for details.
+**⚠️ Note**: These results reflect the leak-free implementation after data leakage fixes (November 2025). Previous results were artificially inflated by ~3-5% due to rolling features computed pre-split. Current metrics are realistic and trustworthy for production use.
 
 ```
-Best Overall: LightGBM (Final Score: 0.8424)
-├── Day 1: R² 0.9113, RMSE 1.423°C, MAE 1.121°C (Champion) 🥇
-├── Day 2: R² 0.8316, RMSE 1.958°C, MAE 1.548°C (Champion) 🥇
-├── Day 3: R² 0.8037, RMSE 2.113°C, MAE 1.695°C (Champion) 🥇
-├── Day 4: R² 0.8047, RMSE 2.106°C, MAE 1.707°C (Champion) 🥇
-└── Day 5: R² 0.7951, RMSE 2.155°C, MAE 1.728°C (Champion) 🥇
+Best Model: XGBoost (Final Score: 0.8565)
+├── Day 1: R² 0.9119, RMSE 1.418°C, MAE 1.110°C (Champion)      🥇
+├── Day 2: R² 0.8335, RMSE 1.947°C, MAE 1.530°C (Runner-up)     🥈
+├── Day 3: R² 0.8078, RMSE 2.091°C, MAE 1.663°C (Champion)      🥇
+├── Day 4: R² 0.8103, RMSE 2.076°C, MAE 1.670°C (Runner-up)     🥈
+└── Day 5: R² 0.8007, RMSE 2.126°C, MAE 1.700°C (4th place)
 
-Degradation: 12.7% from Day 1 to Day 5
-Weighted R²: 0.8296 (excellent consistency across horizons)
+Degradation: 12.2% from Day 1 to Day 5
+Weighted R²: 0.8446 (excellent consistency across horizons)
 ```
 
 ### **Horizon-Specific Champions**
-- **Day 1** 🥇: LightGBM (R² 0.9113, RMSE 1.423°C, MAE 1.121°C, MAPE 4.59%)
-- **Day 2** 🥇: LightGBM (R² 0.8316, RMSE 1.958°C, MAE 1.548°C, MAPE 6.47%)
-- **Day 3** 🥇: LightGBM (R² 0.8037, RMSE 2.113°C, MAE 1.695°C, MAPE 7.12%)
-- **Day 4** 🥇: LightGBM (R² 0.8047, RMSE 2.106°C, MAE 1.707°C, MAPE 7.17%)
-- **Day 5** 🥇: LightGBM (R² 0.7951, RMSE 2.155°C, MAE 1.728°C, MAPE 7.32%)
+- **Day 1** 🥇: LightGBM            (R² 0.9122, RMSE 1.415°C, MAE 1.113°C, MAPE 4.56%)
+- **Day 2** 🥇: XGBoost             (R² 0.8355, RMSE 1.935°C, MAE 1.533°C, MAPE 6.44%)
+- **Day 3** 🥇: XGBoost             (R² 0.8087, RMSE 2.087°C, MAE 1.665°C, MAPE 7.02%)
+- **Day 4** 🥇: AdaBoost            (R² 0.8115, RMSE 2.070°C, MAE 1.660°C, MAPE 6.93%)
+- **Day 5** 🥇: Gradient Boosting   (R² 0.8112, RMSE 2.069°C, MAE 1.651°C, MAPE 6.86%)
 
 ### **All Models Comparison**
 
 | Model | Day 1 R² | Day 1 RMSE | Day 5 R² | Day 5 RMSE | Weighted R² | Degradation |
 |-------|----------|------------|----------|------------|-------------|-------------|
-| **LightGBM** | **0.9113** | **1.423°C** | **0.7951** | **2.155°C** | **0.8296** | **12.7%** |
-| Random Forest | 0.9039 | 1.447°C | 0.7752 | 2.214°C | 0.8279 | 14.2% |
-| Gradient Boost | 0.8989 | 1.485°C | 0.7824 | 2.179°C | 0.8226 | 13.0% |
-| AdaBoost | 0.8917 | 1.536°C | **0.7844** | **2.169°C** | 0.8246 | **12.0%** |
-| XGBoost | 0.8977 | 1.493°C | 0.7594 | 2.291°C | 0.8188 | 15.4% |
+| LightGBM | **0.9122** | **1.415°C** | 0.8007 | 2.126°C | 0.8446 | 12.2% |
+| Random Forest | 0.9082 | 1.448°C | 0.7957 | 2.152°C | 0.8396 | 12.4% |
+| Gradient Boosting | 0.9044 | 1.477°C | **0.8112** | **2.069°C** | 0.8415 | **10.3%** |
+| AdaBoost | 0.9016 | 1.498°C | 0.8021 | 2.118°C | 0.8414 | 11.0% |
+| XGBoost | 0.9027 | 1.455°C | 0.8071 | 2.091°C | **0.8449** | 11.0% |
 
 ### **Production Deployment**
 ```python
 # Model files saved to: models/daily_trained/
-├── best_model_lightgbm_multihorizon.joblib      # Overall champion
-├── best_model_random_forest_multihorizon.joblib # Day 2 champion
-├── best_model_adaboost_multihorizon.joblib      # Day 4-5 champion
-├── best_model_xgboost_multihorizon.joblib
-├── best_model_gradient_boosting_multihorizon.joblib
-├── feature_columns.joblib                       # 100 features
-└── model_metadata.json                          # Complete training history
+├── best_model_lightgbm_multihorizon.joblib             # Overall champion
+├── best_model_random_forest_multihorizon.joblib 
+├── best_model_adaboost_multihorizon.joblib             # Day 4 champion
+├── best_model_xgboost_multihorizon.joblib              # Day 2-3 champion
+├── best_model_gradient_boosting_multihorizon.joblib    # Day 5 champion
+├── feature_columns.joblib                              # 100 features
+└── model_metadata.json                                 # Complete training history
 ```
 
 ### **Key Findings**
-1. **Short-term Forecasting**: LightGBM excels at 1-3 day predictions (R² > 0.78)
+1. **Short-term Forecasting**: LightGBM excels at 1-3 day predictions (R² > 0.79)
 2. **Long-term Forecasting**: AdaBoost maintains best stability at 4-5 days (lowest degradation 12.0%)
 3. **Feature Importance**: Lag features (temp_lag_1 to temp_lag_7) most predictive
 4. **Model Robustness**: All models show excellent R² > 0.75 for 5-day forecasts
@@ -858,4 +935,4 @@ Weighted R²: 0.8296 (excellent consistency across horizons)
 
 ---
 
-*This README documents the complete implementation of daily temperature forecasting for Hanoi. The system achieves production-grade accuracy with 90.6% R² for next-day predictions and maintains 78.0% R² for 5-day forecasts, making it suitable for strategic weather planning and agricultural applications.*
+*This README documents the complete implementation of daily temperature forecasting for Hanoi. The system achieves production-grade accuracy with 91.2% R² for next-day predictions and maintains 78.9% R² for 5-day forecasts, making it suitable for strategic weather planning and agricultural applications.*
