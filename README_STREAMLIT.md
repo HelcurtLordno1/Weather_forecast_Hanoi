@@ -2,7 +2,7 @@
 
 A comprehensive set of Streamlit web applications for weather forecasting in Hanoi, Vietnam using advanced machine learning models. This project provides both **daily** and **hourly** weather prediction capabilities with interactive visualizations and model monitoring.
 
-For more informations, please visit this link: https://youtu.be/iDhHP79MKu0?si=L60GwyTtSm2ObUAz
+For more informations: https://youtu.be/iDhHP79MKu0?si=L60GwyTtSm2ObUAz
 
 ## 📋 Table of Contents
 
